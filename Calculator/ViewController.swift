@@ -23,6 +23,8 @@ class ViewController: UIViewController
         self.displayText.delegate = self.displayText
     }
 
+    
+    //Tries to append char to the display
     private func tryAppendChar(_ c: Character)
     {
         if c == "."
