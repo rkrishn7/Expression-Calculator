@@ -17,6 +17,7 @@
 		A53CE8732212170E0051DBB0 /* Stack.swift in Sources */ = {isa = PBXBuildFile; fileRef = A53CE8722212170E0051DBB0 /* Stack.swift */; };
 		A56E52FB221E723E0047DBD9 /* ExpressionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56E52FA221E723E0047DBD9 /* ExpressionView.swift */; };
 		A56E52FD221F3E7F0047DBD9 /* CharacterExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56E52FC221F3E7F0047DBD9 /* CharacterExtensions.swift */; };
+		A5E413C52227EC0F00F75652 /* BaseConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5E413C42227EC0F00F75652 /* BaseConverter.swift */; };
 		A5E62325221D139300768D4B /* CalculatorViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5E62324221D139300768D4B /* CalculatorViews.swift */; };
 		A5E62327221D43A000768D4B /* BinaryCalculatorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5E62326221D43A000768D4B /* BinaryCalculatorViewController.swift */; };
 		A5E62329221D553F00768D4B /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5E62328221D553F00768D4B /* SettingsViewController.swift */; };
@@ -47,6 +48,7 @@
 		A53CE8722212170E0051DBB0 /* Stack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stack.swift; sourceTree = "<group>"; };
 		A56E52FA221E723E0047DBD9 /* ExpressionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpressionView.swift; sourceTree = "<group>"; };
 		A56E52FC221F3E7F0047DBD9 /* CharacterExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterExtensions.swift; sourceTree = "<group>"; };
+		A5E413C42227EC0F00F75652 /* BaseConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseConverter.swift; sourceTree = "<group>"; };
 		A5E62324221D139300768D4B /* CalculatorViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatorViews.swift; sourceTree = "<group>"; };
 		A5E62326221D43A000768D4B /* BinaryCalculatorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryCalculatorViewController.swift; sourceTree = "<group>"; };
 		A5E62328221D553F00768D4B /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
@@ -104,6 +106,7 @@
 				A5E62328221D553F00768D4B /* SettingsViewController.swift */,
 				A56E52FA221E723E0047DBD9 /* ExpressionView.swift */,
 				A56E52FC221F3E7F0047DBD9 /* CharacterExtensions.swift */,
+				A5E413C42227EC0F00F75652 /* BaseConverter.swift */,
 			);
 			path = Calculator;
 			sourceTree = "<group>";
@@ -227,6 +230,7 @@
 				A5E62327221D43A000768D4B /* BinaryCalculatorViewController.swift in Sources */,
 				A53CE851221176E50051DBB0 /* AppDelegate.swift in Sources */,
 				A53CE871221212550051DBB0 /* Expression.swift in Sources */,
+				A5E413C52227EC0F00F75652 /* BaseConverter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

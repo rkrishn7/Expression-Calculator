@@ -23,7 +23,6 @@ class ViewController: UIViewController
         self.displayText.delegate = self.displayText
     }
 
-    
     //Tries to append char to the display
     private func tryAppendChar(_ c: Character)
     {
@@ -125,9 +124,11 @@ class ViewController: UIViewController
         {
             if txt != "0" && txt.count != 1
             {
-                let sub = txt.prefix(txt.count - 1)
+                /*let sub = txt.prefix(txt.count - 1)
                 
-                displayText.text = String(sub)
+                displayText.text = String(sub)*/
+                
+                displayText.deleteBackward()
             }
             else if txt.count == 1
             {

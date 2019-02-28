@@ -12,7 +12,7 @@ import Foundation
 enum CalculatorViews: String
 {
     case DecimalCalculator = "Decimal"
-    case BinaryCalculator  = "Binary"
+    case Converter         = "Base Converter"
     
-    static let allViews = [DecimalCalculator, BinaryCalculator]
+    static let allViews = [DecimalCalculator, Converter]
 }
