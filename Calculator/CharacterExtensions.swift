@@ -15,6 +15,11 @@ extension Character
         return (char >= "0" && char <= "9")
     }
     
+    static func isHexChar(_ char: Character) -> Bool
+    {
+        return (char >= "A" && char <= "F")
+    }
+    
     static func isOperator(_ char: Character) -> Bool
     {
         return char == OperatorCharacters.addition || char == OperatorCharacters.subtraction    ||
