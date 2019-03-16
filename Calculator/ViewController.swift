@@ -64,7 +64,7 @@ class ViewController: UIViewController
             {
                 displayText.text = "0"
             }
-            else if last.isNumber() || last == "."
+            else if last.isNumber() || last == "." || last == "(" || last == ")"
             {
                 displayText.deleteBackward()
             }
@@ -79,17 +79,20 @@ class ViewController: UIViewController
                     newText += tokens![i]
                 }
                 
-                displayText.text = newText
+                if newText.isEmpty
+                {
+                    displayText.text = "0"
+                }
+                else
+                {
+                    displayText.text = newText
+                }
             }
             
             self.equalsButton.isSelected = false
         }
     }
     
-    private func appendTextToExpressionView(textToAppend: String)
-    {
-    }
-
     //Tries to append char to the display
     private func tryAppendText(_ textToAppend: String)
     {
