@@ -16,134 +16,188 @@ class ViewController: UIViewController
     
     private var savedAnswer: String?
     
+    //SCIENTIFIC BUTTONS
+    @IBOutlet weak var cosBtn: UIButton!
+    @IBOutlet weak var sinBtn: UIButton!
+    @IBOutlet weak var tanBtn: UIButton!
+    @IBOutlet weak var coshBtn: UIButton!
+    @IBOutlet weak var sinhBtn: UIButton!
+    @IBOutlet weak var tanhBtn: UIButton!
+    @IBOutlet weak var logBtn: UIButton!
+    @IBOutlet weak var lnBtn: UIButton!
+    @IBOutlet weak var sqrtBtn: UIButton!
+    @IBOutlet weak var cubertBtn: UIButton!
+    @IBOutlet weak var factorialBtn: UIButton!
+    @IBOutlet weak var eConstBtn: UIButton!
+    @IBOutlet weak var pow2Btn: UIButton!
+    @IBOutlet weak var pow3Btn: UIButton!
+    @IBOutlet weak var piConstBtn: UIButton!
+    
+    //Array for buttons hidden on startup
+    var hiddenButtons: [UIButton]!
+    
     override func viewDidLoad()
     {
         super.viewDidLoad()
         
         self.displayText.delegate = self.displayText
+        
+        hiddenButtons = [cosBtn, sinBtn, tanBtn, coshBtn, sinhBtn, tanhBtn, logBtn, lnBtn, sqrtBtn, cubertBtn, factorialBtn, eConstBtn, pow2Btn, pow3Btn, piConstBtn]
+        
+        //Hide scientific buttons on startup (if orientation is portrait)
+        if UIDevice.current.orientation.isPortrait
+        {
+            for btn in hiddenButtons
+            {
+                btn.isHidden = true
+            }
+        }
+    }
+    
+    private func backspace()
+    {
+        if let expression = displayText.text
+        {
+            let last = String(expression.last!)
+            
+            if expression.count == 1
+            {
+                displayText.text = "0"
+            }
+            else if last.isNumber() || last == "."
+            {
+                displayText.deleteBackward()
+            }
+            else
+            {
+                let tokens = Expression.convertToInfixArray(infixExpression: expression)
+                
+                var newText = ""
+                
+                for i in 0..<(tokens!.count - 1)
+                {
+                    newText += tokens![i]
+                }
+                
+                displayText.text = newText
+            }
+            
+            self.equalsButton.isSelected = false
+        }
+    }
+    
+    private func appendTextToExpressionView(textToAppend: String)
+    {
     }
 
     //Tries to append char to the display
-    private func tryAppendChar(_ c: Character)
+    private func tryAppendText(_ textToAppend: String)
     {
-        if c == "."
+        if let expression = displayText.text
         {
-            if let txt = displayText.text
+            let tokens = Expression.convertToInfixArray(infixExpression: expression) //There should always be at least one value
+            
+            if textToAppend == "."
             {
-                let tokens = Expression.convertToInfixArray(infixExpression: txt)
-                
-                let last = tokens.last!
-                
-                if !last.contains(".") && Character.isDigit(txt.last!)
+                if let last = tokens?.last
                 {
-                    displayText.insertText(String(c))
+                    if !last.contains(".") && Character.isDigit(expression.last!)
+                    {
+                        displayText.insertText(textToAppend)
+                    }
                 }
             }
-        }
-        else if Character.isOperator(c)
-        {
-            //Only append if the last character in the display is a number
-            if let txt = displayText.text
+            else if textToAppend.isOperator()
             {
-                if txt == "0" && c == OperatorCharacters.negation
+                if expression == "0" && textToAppend == Operators.subtraction.rawValue
                 {
-                    displayText.text = String(c)
+                    displayText.text = textToAppend
                 }
-                else if Character.isDigit(txt.last!) || txt.last! == ")" || txt.last! == "e"
+                else if (tokens!.last!.isNumber() || tokens!.last! == ")" || tokens!.last! == "e") && expression.last! != "."
                 {
-                    displayText.insertText(String(c))
+                    displayText.insertText(textToAppend)
                 }
-                else if (txt.last! == "(" || Character.isOperator(txt.last!)) && c == OperatorCharacters.negation //Allow for unary negation
+                else if (tokens!.last! == "(" || tokens!.last!.isOperator() || tokens!.last!.isFunction()) && textToAppend == Operators.subtraction.rawValue //Allow for negation
                 {
-                    displayText.insertText(String(c))
+                    displayText.insertText(textToAppend)
                 }
             }
-        }
-        else if c == "("
-        {
-            if let txt = displayText.text
+            else if textToAppend.isFunction()
             {
-                if Character.isOperator(txt.last!) || txt.last! == "("
+                if expression == "0" || self.equalsButton.isSelected == true
+                {
+                    displayText.text = textToAppend
+                }
+                else if (tokens!.last! == "(" || tokens!.last!.isOperator() || tokens!.last!.isFunction())
+                {
+                    displayText.insertText(textToAppend)
+                }
+            }
+            else if textToAppend == "("
+            {
+                if Character.isOperator(expression.last!) || expression.last! == "(" || tokens!.last!.isFunction()
                 {
                     if self.equalsButton.isSelected == true
                     {
-                        displayText.text = String(c)
+                        displayText.text = textToAppend
                     }
                     else
                     {
-                        displayText.insertText(String(c))
+                        displayText.insertText(textToAppend)
                     }
                 }
-                else if txt == "0"
+                else if expression == "0"
                 {
                     displayText.text = "("
                 }
             }
-        }
-        else if c == ")"
-        {
-            if let txt = displayText.text
+            else if textToAppend == ")"
             {
-                if Character.isDigit(txt.last!) || txt.last! == ")"
+                if Character.isDigit(expression.last!) || expression.last! == ")"
                 {
-                    displayText.insertText(String(c))
+                    displayText.insertText(textToAppend)
                 }
-            }
-        }
-        else
-        {
-            if displayText.text == "0"
-            {
-                displayText.text = String(c)
             }
             else
             {
-                if self.equalsButton.isSelected == true
+                if displayText.text == "0"
                 {
-                    displayText.text = String(c)
+                    displayText.text = textToAppend
                 }
-                else
+                else if (!(tokens!.last!.contains(".")) || !(textToAppend.contains(".")))
                 {
-                    if let txt = displayText.text
+                    if self.equalsButton.isSelected == true
                     {
-                        if txt.last != ")"
+                        displayText.text = textToAppend
+                    }
+                    else
+                    {
+                        if expression.last != ")"
                         {
-                            displayText.insertText(String(c))
+                            displayText.insertText(textToAppend)
                         }
                     }
                 }
             }
+            self.equalsButton.isSelected = false
         }
-        
-        self.equalsButton.isSelected = false
+    }
+    
+    @IBAction func functionButtonPress(_ sender: Any)
+    {
+        tryAppendText((sender as! UIButton).titleLabel!.text!)
+        tryAppendText("(")
     }
     
     @IBAction func deleteButtonPress(_ sender: Any)
     {
-        if let txt = displayText.text
-        {
-            if txt != "0" && txt.count != 1
-            {
-                /*let sub = txt.prefix(txt.count - 1)
-                
-                displayText.text = String(sub)*/
-                
-                displayText.deleteBackward()
-            }
-            else if txt.count == 1
-            {
-                displayText.text = "0"
-            }
-        }
-        
-        self.equalsButton.isSelected = false
-        
+        backspace()
         //animateButton(sender: sender as! UIButton)
     }
     
     @IBAction func leftParenButtonPress(_ sender: Any)
     {
-        tryAppendChar("(")
+        tryAppendText("(")
         
         //animateButton(sender: sender as! UIButton)
     }
@@ -151,7 +205,7 @@ class ViewController: UIViewController
     
     @IBAction func rightParenButtonPress(_ sender: Any)
     {
-        tryAppendChar(")")
+        tryAppendText(")")
         
         //animateButton(sender: sender as! UIButton)
     }
@@ -168,21 +222,21 @@ class ViewController: UIViewController
     
     @IBAction func divideButtonPress(_ sender: Any)
     {
-        tryAppendChar(OperatorCharacters.division)
+        tryAppendText(Operators.division.rawValue)
         
         //animateButton(sender: sender as! UIButton)
     }
     
     @IBAction func multiplyButtonPress(_ sender: Any)
     {
-        tryAppendChar(OperatorCharacters.multiplication)
+        tryAppendText(Operators.multiplication.rawValue)
         
         //animateButton(sender: sender as! UIButton)
     }
     
     @IBAction func exponentButtonPress(_ sender: Any)
     {
-        tryAppendChar(OperatorCharacters.exponentiation)
+        tryAppendText(Operators.exponentiation.rawValue)
         
         //animateButton(sender: sender as! UIButton)
     }
@@ -190,27 +244,27 @@ class ViewController: UIViewController
     
     @IBAction func minusButtonPress(_ sender: Any)
     {
-        tryAppendChar(OperatorCharacters.subtraction)
+        tryAppendText(Operators.subtraction.rawValue)
         
         //animateButton(sender: sender as! UIButton)
     }
     
     @IBAction func decimalButtonPress(_ sender: Any)
     {
-        tryAppendChar(".")
+        tryAppendText(".")
         
         //animateButton(sender: sender as! UIButton)
     }
     @IBAction func plusButtonPress(_ sender: Any)
     {
-        tryAppendChar(OperatorCharacters.addition)
+        tryAppendText(Operators.addition.rawValue)
         
         //animateButton(sender: sender as! UIButton)
     }
     
     @IBAction func modButtonPress(_ sender: Any)
     {
-        tryAppendChar(OperatorCharacters.modulo)
+        tryAppendText(Operators.modulo.rawValue)
         
         //animateButton(sender: sender as! UIButton)
     }
@@ -219,10 +273,7 @@ class ViewController: UIViewController
     {
         if let answer = self.savedAnswer
         {
-            for c in answer
-            {
-                tryAppendChar(c)
-            }
+            tryAppendText(answer)
         }
         
         //animateButton(sender: sender as! UIButton)
@@ -234,7 +285,7 @@ class ViewController: UIViewController
         
         if let txt = displayText.text
         {
-            if Expression.convertToInfixArray(infixExpression: txt).count == 1
+            if Expression.convertToInfixArray(infixExpression: txt)!.count == 1
             {
                 suppressErrors()
                 return
@@ -301,77 +352,128 @@ class ViewController: UIViewController
         })
     }
     
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator)
+    {
+        super.viewWillTransition(to: size, with: coordinator)
+        
+        if UIDevice.current.orientation.isPortrait //Regular Mode
+        {
+            for btn in hiddenButtons
+            {
+                btn.isHidden = true
+            }
+        }
+        else if UIDevice.current.orientation.isLandscape //Scientific Mode
+        {
+            for btn in hiddenButtons
+            {
+                btn.isHidden = false
+            }
+        }
+    }
+    
     /*
         Numeric Button Presses
      */
     
     @IBAction func zeroButtonPress(_ sender: Any)
     {
-        tryAppendChar("0")
+        tryAppendText("0")
         
         //animateButton(sender: sender as! UIButton)
     }
     
     @IBAction func oneButtonPress(_ sender: Any)
     {
-        tryAppendChar("1")
+        tryAppendText("1")
         
         //animateButton(sender: sender as! UIButton)
     }
     
     @IBAction func twoButtonPress(_ sender: Any)
     {
-        tryAppendChar("2")
+        tryAppendText("2")
         
         //animateButton(sender: sender as! UIButton)
     }
     
     @IBAction func threeButtonPress(_ sender: Any)
     {
-        tryAppendChar("3")
+        tryAppendText("3")
         
         //animateButton(sender: sender as! UIButton)
     }
     
     @IBAction func fourButtonPress(_ sender: Any)
     {
-        tryAppendChar("4")
+        tryAppendText("4")
         
         //animateButton(sender: sender as! UIButton)
     }
     
     @IBAction func fiveButtonPress(_ sender: Any)
     {
-        tryAppendChar("5")
+        tryAppendText("5")
         
         //animateButton(sender: sender as! UIButton)
     }
     
     @IBAction func sixButtonPress(_ sender: Any)
     {
-        tryAppendChar("6")
+        tryAppendText("6")
         
         //animateButton(sender: sender as! UIButton)
     }
     
     @IBAction func sevenButtonPress(_ sender: Any)
     {
-        tryAppendChar("7")
+        tryAppendText("7")
         
         //animateButton(sender: sender as! UIButton)
     }
     
     @IBAction func eightButtonPress(_ sender: Any)
     {
-        tryAppendChar("8")
+        tryAppendText("8")
         
         //animateButton(sender: sender as! UIButton)
     }
     
     @IBAction func nineButtonPress(_ sender: Any)
     {
-        tryAppendChar("9")
+        tryAppendText("9")
         
         //animateButton(sender: sender as! UIButton)
+    }
+}
+
+extension NSLayoutConstraint
+{
+    /**
+     Change multiplier constraint
+     
+     - parameter multiplier: CGFloat
+     - returns: NSLayoutConstraint
+     */
+    func setMultiplier(multiplier:CGFloat) -> NSLayoutConstraint
+    {
+        
+        NSLayoutConstraint.deactivate([self])
+        
+        let newConstraint = NSLayoutConstraint(
+            item: firstItem,
+            attribute: firstAttribute,
+            relatedBy: relation,
+            toItem: secondItem,
+            attribute: secondAttribute,
+            multiplier: multiplier,
+            constant: constant)
+        
+        newConstraint.priority = priority
+        newConstraint.shouldBeArchived = self.shouldBeArchived
+        newConstraint.identifier = self.identifier
+        
+        NSLayoutConstraint.activate([newConstraint])
+        return newConstraint
     }
 }
