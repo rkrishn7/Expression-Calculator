@@ -23,7 +23,6 @@ class ExpressionView: UITextView, UITextViewDelegate
     override init(frame: CGRect, textContainer: NSTextContainer?)
     {
         super.init(frame: frame, textContainer: textContainer)
-        
     }
     
     required init?(coder aDecoder: NSCoder)
@@ -40,12 +39,11 @@ class ExpressionView: UITextView, UITextViewDelegate
                 highlightMatchingParentheses(indexOfRParen: self.text.index(before: self.text.endIndex))
                 resetTypingAttributes()
             }
-            else{
+            else
+            {
                 resetTextAttributes()
             }
         }
-        
-        //
     }
     
     private func resetTypingAttributes()
@@ -106,7 +104,7 @@ class ExpressionView: UITextView, UITextViewDelegate
         let default_attributes = [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 25.0, weight: UIFont.Weight.ultraLight),
                                   NSAttributedString.Key.foregroundColor: UIColor.white]
         
-        let custom_attributes = [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 30.0, weight: UIFont.Weight.ultraLight),
+        let custom_attributes = [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 30.0, weight: UIFont.Weight.semibold),
                                  NSAttributedString.Key.foregroundColor: UIColor.yellow]
 
         attributedTxt.addAttributes(default_attributes, range: NSMakeRange(0, txt.count))

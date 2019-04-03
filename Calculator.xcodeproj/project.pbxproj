@@ -20,7 +20,8 @@
 		A5E413C52227EC0F00F75652 /* BaseConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5E413C42227EC0F00F75652 /* BaseConverter.swift */; };
 		A5E62325221D139300768D4B /* CalculatorViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5E62324221D139300768D4B /* CalculatorViews.swift */; };
 		A5E62327221D43A000768D4B /* BinaryCalculatorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5E62326221D43A000768D4B /* BinaryCalculatorViewController.swift */; };
-		A5E62329221D553F00768D4B /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5E62328221D553F00768D4B /* SettingsViewController.swift */; };
+		A5E70DA72246F96E00429D17 /* calculator.png in Resources */ = {isa = PBXBuildFile; fileRef = A5E70DA62246F96E00429D17 /* calculator.png */; };
+		A5FA9A662251A35900BF3880 /* MathUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5FA9A652251A35900BF3880 /* MathUtilities.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,7 +52,8 @@
 		A5E413C42227EC0F00F75652 /* BaseConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseConverter.swift; sourceTree = "<group>"; };
 		A5E62324221D139300768D4B /* CalculatorViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatorViews.swift; sourceTree = "<group>"; };
 		A5E62326221D43A000768D4B /* BinaryCalculatorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryCalculatorViewController.swift; sourceTree = "<group>"; };
-		A5E62328221D553F00768D4B /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
+		A5E70DA62246F96E00429D17 /* calculator.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = calculator.png; sourceTree = "<group>"; };
+		A5FA9A652251A35900BF3880 /* MathUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MathUtilities.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -93,6 +95,7 @@
 		A53CE84F221176E50051DBB0 /* Calculator */ = {
 			isa = PBXGroup;
 			children = (
+				A5E70DA52246F96300429D17 /* Icons */,
 				A53CE850221176E50051DBB0 /* AppDelegate.swift */,
 				A53CE852221176E50051DBB0 /* ViewController.swift */,
 				A53CE854221176E50051DBB0 /* Main.storyboard */,
@@ -103,10 +106,10 @@
 				A53CE8722212170E0051DBB0 /* Stack.swift */,
 				A5E62324221D139300768D4B /* CalculatorViews.swift */,
 				A5E62326221D43A000768D4B /* BinaryCalculatorViewController.swift */,
-				A5E62328221D553F00768D4B /* SettingsViewController.swift */,
 				A56E52FA221E723E0047DBD9 /* ExpressionView.swift */,
 				A56E52FC221F3E7F0047DBD9 /* CharacterExtensions.swift */,
 				A5E413C42227EC0F00F75652 /* BaseConverter.swift */,
+				A5FA9A652251A35900BF3880 /* MathUtilities.swift */,
 			);
 			path = Calculator;
 			sourceTree = "<group>";
@@ -118,6 +121,14 @@
 				A53CE867221176E60051DBB0 /* Info.plist */,
 			);
 			path = CalculatorTests;
+			sourceTree = "<group>";
+		};
+		A5E70DA52246F96300429D17 /* Icons */ = {
+			isa = PBXGroup;
+			children = (
+				A5E70DA62246F96E00429D17 /* calculator.png */,
+			);
+			path = Icons;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -204,6 +215,7 @@
 				A53CE85B221176E60051DBB0 /* LaunchScreen.storyboard in Resources */,
 				A53CE858221176E60051DBB0 /* Assets.xcassets in Resources */,
 				A53CE856221176E50051DBB0 /* Main.storyboard in Resources */,
+				A5E70DA72246F96E00429D17 /* calculator.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -224,8 +236,8 @@
 				A5E62325221D139300768D4B /* CalculatorViews.swift in Sources */,
 				A53CE8732212170E0051DBB0 /* Stack.swift in Sources */,
 				A56E52FB221E723E0047DBD9 /* ExpressionView.swift in Sources */,
-				A5E62329221D553F00768D4B /* SettingsViewController.swift in Sources */,
 				A53CE853221176E50051DBB0 /* ViewController.swift in Sources */,
+				A5FA9A662251A35900BF3880 /* MathUtilities.swift in Sources */,
 				A56E52FD221F3E7F0047DBD9 /* CharacterExtensions.swift in Sources */,
 				A5E62327221D43A000768D4B /* BinaryCalculatorViewController.swift in Sources */,
 				A53CE851221176E50051DBB0 /* AppDelegate.swift in Sources */,

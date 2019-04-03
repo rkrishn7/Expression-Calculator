@@ -24,7 +24,6 @@ extension Character
     {
         return char == OperatorCharacters.addition || char == OperatorCharacters.subtraction    ||
             char == OperatorCharacters.division || char == OperatorCharacters.multiplication ||
-            char == OperatorCharacters.modulo   || char == OperatorCharacters.exponentiation ||
-            char == OperatorCharacters.negation
+            char == OperatorCharacters.modulo   || char == OperatorCharacters.exponentiation
     }
 }

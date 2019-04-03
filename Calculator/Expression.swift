@@ -12,12 +12,12 @@ class Expression
 {
     private var exp: String!
     
-    init(expression exp: String!)
+    init(expression exp: String)
     {
         self.exp = exp
     }
     
-    func evaluate() throws -> Double //implicitly internal
+    func evaluate() throws -> NSDecimalNumber
     {
         do
         {
@@ -40,7 +40,7 @@ class Expression
      *Throws INVALID_EXPRESSION error if the input expression is not formatted correctly
      *Throws CALCULATION_OVERFLOW error if the calculation is too large
      */
-    private func evaluate(infixExp: String!) throws -> Double
+    private func evaluate(infixExp: String!) throws -> NSDecimalNumber
     {
         do
         {
@@ -50,9 +50,70 @@ class Expression
             
             for token in postfix
             {
-                if Character.isDigit(token[token.startIndex]) || token == "-1"
+                if token.isNumber()
                 {
                     output.push(token)
+                }
+                else if token.isIrrational()
+                {
+                    switch token
+                    {
+                        case "π":
+                            output.push(String(IrrationalValues.pi.rawValue))
+                        case "𝑒":
+                            output.push(String(IrrationalValues.e.rawValue))
+                        default:
+                            throw ExpressionError.INVALID_EXPRESSION
+                    }
+                }
+                else if token.isFunction()
+                {
+                    if let x = output.pop()
+                    {
+                        let val1 = NSDecimalNumber(string: x)
+                        
+                        switch token
+                        {
+                            case Functions.sin.rawValue:
+                                output.push(String(describing: NSDecimalNumber(value: sin(val1.doubleValue))))
+                            case Functions.cos.rawValue:
+                                output.push(String(describing: NSDecimalNumber(value: cos(val1.doubleValue))))
+                            case Functions.tan.rawValue:
+                                output.push(String(describing: NSDecimalNumber(value: tan(val1.doubleValue))))
+                            case Functions.sininv.rawValue:
+                                output.push(String(describing: NSDecimalNumber(value: sinh(val1.doubleValue))))
+                            case Functions.cosinv.rawValue:
+                                output.push(String(describing: NSDecimalNumber(value: cosh(val1.doubleValue))))
+                            case Functions.taninv.rawValue:
+                                output.push(String(describing: NSDecimalNumber(value: tanh(val1.doubleValue))))
+                            case Functions.log.rawValue:
+                                output.push(String(describing: NSDecimalNumber(value: log(val1.doubleValue)/log(10))))
+                            case Functions.ln.rawValue:
+                                output.push(String(describing: NSDecimalNumber(value: log(val1.doubleValue)/Double(log(IrrationalValues.e.rawValue)))))
+                            case Functions.sqrt.rawValue:
+                                output.push(String(describing: NSDecimalNumber(value: sqrt(val1.doubleValue))))
+                            case Functions.cubert.rawValue:
+                                output.push(String(describing: NSDecimalNumber(value: pow(val1.doubleValue, 1 / 3))))
+                            case Functions.factorial.rawValue:
+                                output.push(String(describing: val1.factorial()))
+                            default:
+                                throw ExpressionError.INVALID_EXPRESSION
+                        }
+                        
+                        if let t = output.peek()
+                        {
+                            let ns = NSDecimalNumber(string: t)
+                            
+                            if ns == NSDecimalNumber.notANumber
+                            {
+                                throw ExpressionError.CALCULATION_OVERFLOW
+                            }
+                        }
+                    }
+                    else
+                    {
+                        throw ExpressionError.INVALID_EXPRESSION
+                    }
                 }
                 else
                 {
@@ -70,18 +131,18 @@ class Expression
                         
                         switch token
                         {
-                            case String(OperatorCharacters.addition):
+                            case Operators.addition.rawValue:
                                 output.push(String(describing: val2.adding(val1)))
-                            case String(OperatorCharacters.subtraction):
+                            case Operators.subtraction.rawValue:
                                 output.push(String(describing: val2.subtracting(val1)))
-                            case String(OperatorCharacters.multiplication):
+                            case Operators.multiplication.rawValue:
                                 output.push(String(describing: val2.multiplying(by: val1)))
-                            case String(OperatorCharacters.division):
+                            case Operators.division.rawValue, Operators.fractionalDivision.rawValue:
                                 output.push(String(describing: val2.dividing(by: val1)))
-                            case String(OperatorCharacters.modulo):
+                            case Operators.modulo.rawValue:
                                 output.push(String(describing: val2.doubleValue.truncatingRemainder(dividingBy: val1.doubleValue)))
-                            case String(OperatorCharacters.exponentiation):
-                                output.push(String(pow(val2.doubleValue, val1.doubleValue)))
+                            case Operators.multiplication.rawValue:
+                                output.push(String(describing: NSDecimalNumber(value: pow(val2.doubleValue, val1.doubleValue))))
                             default:
                                 throw ExpressionError.INVALID_EXPRESSION
                         }
@@ -113,7 +174,7 @@ class Expression
                 }
                 else
                 {
-                    return nsDecimalResult.doubleValue
+                    return nsDecimalResult
                 }
             }
             else
@@ -128,6 +189,55 @@ class Expression
         }
     }
     
+    func isValidPartialExpression(exp: String) -> Bool
+    {
+        let tokens = Expression.convertToInfixArray(infixExpression: exp)
+        
+        if tokens == nil
+        {
+            return false
+        }
+        
+        for i in 0..<tokens!.count
+        {
+            if tokens![i].isOperator()
+            {
+                if tokens![i] != Operators.subtraction.rawValue
+                {
+                    if i == 0 || i == tokens!.count - 1{
+                        return false
+                    }
+                    else if tokens![i - 1].isOperator() || tokens![i + 1].isOperator(){
+                        return false
+                    }
+                }
+            }
+            else if tokens![i].isNumber()
+            {
+                if i > 0
+                {
+                    if tokens![i - 1] == ")"{
+                        return false
+                    }
+                }
+            }
+            else if tokens![i].isIrrational()
+            {
+                if i > 0
+                {
+                    if tokens![i - 1] == ")" || tokens![i - 1].isNumber(){
+                        return false
+                    }
+                }
+            }
+            else if tokens![i].isFunction()
+            {
+                
+            }
+        }
+        
+        return true
+    }
     
     
     /*
@@ -142,17 +252,20 @@ class Expression
         let tokens = Expression.convertToInfixArray(infixExpression: exp)
         var output = [String]()
         
-        for token in tokens
+        for token in (tokens ?? [])
         {
-            if Character.isDigit(token[token.startIndex]) || token == "-1"
+            //if Character.isDigit(token[token.startIndex]) || token == "-1"
+            if token.isNumber()
             {
                 output.append(token)
             }
-            else if token[token.startIndex] == "("
+                //else if token[token.startIndex] == "("
+            else if token == "("
             {
                 stk.push(String(token))
             }
-            else if token[token.startIndex] == ")"
+                //else if token[token.startIndex] == ")"
+            else if token == ")"
             {
                 while(!stk.isEmpty() && stk.peek() != "(")
                 {
@@ -179,7 +292,8 @@ class Expression
             else
             {
                 //We can forcibly peek since we know the stack is not empty
-                while(!stk.isEmpty() && precedence(token[token.startIndex]) <= precedence(stk.peek()![stk.peek()!.startIndex]))
+                //while(!stk.isEmpty() && precedence(token[token.startIndex]) <= precedence(stk.peek()![stk.peek()!.startIndex]))
+                while(!stk.isEmpty() && precedence(token: token) <= precedence(token: stk.peek()!))
                 {
                     if let t = stk.pop()
                     {
@@ -213,140 +327,117 @@ class Expression
     /*
      *Returns the operator precedence of 'op'
      */
-    private func precedence(_ op: Character?) -> Int
+    private func precedence(token: String) -> Int
     {
-        switch op
+        if token.isFunction()
         {
-            case OperatorCharacters.addition, OperatorCharacters.subtraction:
+            return 4
+        }
+        else
+        {
+            switch token
+            {
+            case Operators.addition.rawValue, Operators.subtraction.rawValue:
                 return 1
-            case OperatorCharacters.multiplication, OperatorCharacters.division, OperatorCharacters.modulo:
+            case Operators.multiplication.rawValue, Operators.division.rawValue, Operators.modulo.rawValue:
                 return 2
-            case OperatorCharacters.exponentiation:
+            case Operators.exponentiation.rawValue:
                 return 3
             default:
                 return -1
+            }
         }
     }
     
     /*
      *Converts the given infix expression to an array of tokens
-     *For example: "2 + 232 / 34 * -9" -> ["2", "+", "232", "/", "34", "*", "(", "-1", "*", "9", ")"]
-     *Negative numbers are inputted into the array as follows" "(", "-1", "*", "NUMBER", ")"
+     *For example: "2 + 232 / 34 * -9" -> ["2", "+", "232", "/", "34", "*", "-9"]
      */
-    static func convertToInfixArray(infixExpression: String) -> [String]
+    static func convertToInfixArray(infixExpression: String) -> [String]?
     {
-        var tokens = [String]()
-        
-        var partialToken = ""
-        
-        var index = infixExpression.startIndex
-        
-        //Store the number of left parentheses, we'll need this when evaluating negative numbers
-        var lParenCount = 0
-        
-        //Loop until end of expression
-        while index < infixExpression.endIndex
+        do
         {
-            //Loop while our character is a digit/decimal point
-            while index < infixExpression.endIndex &&
-                (Character.isDigit(infixExpression[index]) || infixExpression[index] == ".")
+            var pattern = "(?<!\\d)-*\\d+(?:\\.\\d+)?|"
+            
+            
+            //Add character class for the operators
+            pattern += "["
+            
+            for op in Operators.allCases
             {
-                //Add digit to partial token
-                partialToken += String(infixExpression[index])
-                
-                //Increment index
-                index = infixExpression.index(index, offsetBy: 1)
+                pattern += op.rawValue
             }
             
-            //Check if our token is in scientific notation
-            if index < infixExpression.endIndex && infixExpression[index] == "e"
+            pattern += "()" //Don't forget about parentheses
+            
+            //Add in irrationals
+            pattern += Irrationals.e.rawValue
+            pattern += Irrationals.pi.rawValue
+            
+            pattern += "]"
+            pattern += "|"
+            
+            //Add capturing group for each function
+            for i in 0..<Functions.allCases.count
             {
-                //We expect a '+' followed by a string of digits
-                partialToken += String(infixExpression[index])
+                pattern += "(\(Functions.allCases[i].rawValue))"
                 
-                index = infixExpression.index(index, offsetBy: 1)
-                
-                //Loop while our character is a digit/plus sign
-                while index < infixExpression.endIndex &&
-                    (Character.isDigit(infixExpression[index]) || infixExpression[index] == OperatorCharacters.addition)
+                if i != Functions.allCases.count - 1
                 {
-                    //Add to partial token
-                    partialToken += String(infixExpression[index])
-                    
-                    //Increment index
-                    index = infixExpression.index(index, offsetBy: 1)
+                    pattern += "|"
                 }
             }
             
-            //If there exists a token, add it to the array
-            if !partialToken.isEmpty
+            let regex = try NSRegularExpression(pattern: pattern)
+            
+            let results = regex.matches(in: infixExpression, range: NSRange(infixExpression.startIndex..., in: infixExpression))
+            
+            var tokens = results.map
             {
-                tokens.append(partialToken)
-                partialToken = ""
+                String(infixExpression[Range($0.range, in: infixExpression)!])
             }
             
-            //Append a right parentheses for every left
-            for _ in 0..<lParenCount
-            {
-                tokens.append(")")
-            }
+            //Changing tokens with two or more negation signs to have only one negation sign
+            //Example: "-----3" -> "-3"
             
-            lParenCount = 0
-            
-            if index < infixExpression.endIndex && Character.isOperator(infixExpression[index])
+            //Also replace irrational symbols with values
+            for i in 0..<tokens.count
             {
-                if infixExpression[index] == OperatorCharacters.negation
+                if tokens[i].starts(with: "--")
                 {
-                    let indexBefore = (index == infixExpression.startIndex) ? infixExpression.startIndex : infixExpression.index(index, offsetBy: -1)
+                    let c = tokens[i].findInstances(of: "-")
                     
-                    //Check if the character before it is an operator or a left parentheses
-                    if Character.isOperator(infixExpression[indexBefore]) || infixExpression[indexBefore] == "("
-                        || indexBefore == infixExpression.startIndex
+                    let end   = tokens[i].index(tokens[i].lastIndex(of: "-")!, offsetBy: 1)
+                    
+                    let num = tokens[i][end..<tokens[i].endIndex]
+                    
+                    if c % 2 != 0
                     {
-                        
-                        //Add (-1 x 'number')
-                        while index < infixExpression.endIndex && infixExpression[index] == OperatorCharacters.negation
-                        {
-                            tokens.append("(")
-                            tokens.append("-1")
-                            tokens.append(String(OperatorCharacters.multiplication))
-                            
-                            lParenCount += 1
-                            
-                            index = infixExpression.index(index, offsetBy: 1)
-                        }
-                        
-                        //Next character should be a digit, continue to top of loop to read it
-                        continue
+                        tokens[i] = "-" + num
                     }
-                    else //We are evaluating for subtraction
+                    else
                     {
-                        tokens.append(String(infixExpression[index]))
-                        index = infixExpression.index(index, offsetBy: 1)
+                        tokens[i] = String(num)
                     }
                 }
-                else //If it's another operator, add it to the tokens array
+                else if tokens[i] == Irrationals.e.rawValue
                 {
-                    tokens.append(String(infixExpression[index]))
-                    index = infixExpression.index(index, offsetBy: 1)
+                    tokens[i] = String(IrrationalValues.e.rawValue)
+                }
+                else if tokens[i] == Irrationals.pi.rawValue
+                {
+                    tokens[i] = String(IrrationalValues.pi.rawValue)
                 }
             }
-            //Add parentheses to token array
-            if index < infixExpression.endIndex && (infixExpression[index] == "(" || infixExpression[index] == ")")
-            {
-                tokens.append(String(infixExpression[index]))
-                index = infixExpression.index(index, offsetBy: 1)
-            }
+            
+            return tokens
         }
-        //Add any leftover partial token
-        if !partialToken.isEmpty
+        catch
         {
-            tokens.append(partialToken)
-            partialToken = ""
+            return nil
         }
-        
-        return tokens
     }
+    
 }
 
 struct OperatorCharacters
@@ -367,4 +458,163 @@ enum ExpressionError: Error
     case INVALID_EXPRESSION
     case CALCULATION_OVERFLOW
     case DIVIDES_BY_ZERO
+}
+
+extension String
+{
+    func isNumber() -> Bool
+    {
+        if self == "-"
+        {
+            return false
+        }
+        if self.findInstances(of: ".") > 1
+        {
+            return false
+        }
+        
+        if let last = self.last
+        {
+            if last == "."
+            {
+                return false
+            }
+        }
+        
+        for i in 0..<self.count
+        {
+            if (!Character.isDigit(self[index(self.startIndex, offsetBy: i)])) && (self[index(self.startIndex, offsetBy: i)] != ".")
+            {
+                if (i == 0 && self[index(self.startIndex, offsetBy: i)] == "-")
+                {
+                    continue
+                }
+                else
+                {
+                    return false
+                }
+            }
+        }
+        
+        return true
+    }
+    
+    func isOperator() -> Bool
+    {
+        return
+            self == Operators.addition.rawValue || self == Operators.subtraction.rawValue    ||
+            self == Operators.division.rawValue || self == Operators.multiplication.rawValue ||
+            self == Operators.modulo.rawValue   || self == Operators.exponentiation.rawValue
+    }
+    
+    
+    func isFunction() -> Bool
+    {
+        for function in Functions.allCases
+        {
+            if self == function.rawValue
+            {
+                return true
+            }
+        }
+        
+        return false
+    }
+    
+    func isIrrational() -> Bool
+    {
+        for irrational in Irrationals.allCases
+        {
+            if self == irrational.rawValue
+            {
+                return true
+            }
+        }
+        
+        return false
+    }
+    
+    func findInstances(of cToFind: Character) -> Int
+    {
+        var count = 0
+        
+        for char in self
+        {
+            if char == cToFind
+            {
+                count += 1
+            }
+        }
+        
+        return count
+    }
+    
+    
+}
+
+enum Functions: String, CaseIterable
+{
+    case cosinv = "cos⁻¹" //Unicode
+    case sininv = "sin⁻¹" //Unicode
+    case taninv = "tan⁻¹" //Unicode
+    case cos = "cos"
+    case sin = "sin"
+    case tan = "tan"
+    case ln  = "ln"
+    case log = "log₁₀"
+    case sqrt = "√" //Unicode
+    case cubert = "∛"
+    case factorial = "!"
+}
+
+enum Operators: String, CaseIterable
+{
+    case subtraction = "-" //DO NOT CHANGE THE POSITION OF THIS CASE
+    case multiplication = "×" //Unicode
+    case division = "÷" //Unicode
+    case fractionalDivision = "∕"
+    case addition = "+"
+    case modulo = "%"
+    case exponentiation = "^"
+}
+
+enum Irrationals: String, CaseIterable
+{
+    case e = "ℯ"
+    case pi = "π"
+}
+
+enum IrrationalValues: Float, CaseIterable
+{
+    case e  = 2.71828
+    case pi = 3.14159
+}
+
+extension NSDecimalNumber
+{
+    func factorial() -> NSDecimalNumber
+    {
+        if self == 0
+        {
+            return NSDecimalNumber(value: 1)
+        }
+        
+        var result = NSDecimalNumber(value: 1)
+        
+        var temp = self.intValue
+        
+        while(temp > 0)
+        {
+            result = result.multiplying(by: NSDecimalNumber(value: temp))
+            
+            if result == NSDecimalNumber.notANumber
+            {
+                return NSDecimalNumber.notANumber
+            }
+            
+            temp -= 1
+        }
+        
+        return result
+    }
 }
