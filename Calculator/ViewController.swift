@@ -8,11 +8,13 @@
 
 import UIKit
 
-class ViewController: UIViewController
+class ViewController: UIViewController, UITextViewDelegate
 {
     @IBOutlet weak var displayText: ExpressionView!
     
     @IBOutlet weak var equalsButton: UIButton!
+
+    @IBOutlet weak var zeroButtonConstraint: NSLayoutConstraint!
     
     private var savedAnswer: String?
     
@@ -32,6 +34,9 @@ class ViewController: UIViewController
     @IBOutlet weak var pow2Btn: UIButton!
     @IBOutlet weak var pow3Btn: UIButton!
     @IBOutlet weak var piConstBtn: UIButton!
+    @IBOutlet weak var toFracBtn: UIButton!
+    @IBOutlet weak var toDecBtn: UIButton!
+    
     
     //Array for buttons hidden on startup
     var hiddenButtons: [UIButton]!
@@ -42,15 +47,17 @@ class ViewController: UIViewController
         
         self.displayText.delegate = self.displayText
         
-        hiddenButtons = [cosBtn, sinBtn, tanBtn, coshBtn, sinhBtn, tanhBtn, logBtn, lnBtn, sqrtBtn, cubertBtn, factorialBtn, eConstBtn, pow2Btn, pow3Btn, piConstBtn]
+        hiddenButtons = [cosBtn, sinBtn, tanBtn, coshBtn, sinhBtn, tanhBtn, logBtn, lnBtn, sqrtBtn, cubertBtn, factorialBtn, eConstBtn, pow2Btn, pow3Btn, piConstBtn, toFracBtn, toDecBtn]
         
         //Hide scientific buttons on startup (if orientation is portrait)
-        if UIDevice.current.orientation.isPortrait
+        //NOTE: Have to do it this way...can't check if device orientation is portrait
+        if UIApplication.shared.statusBarOrientation.isPortrait
         {
-            for btn in hiddenButtons
-            {
-                btn.isHidden = true
-            }
+            updateViewPortrait()
+        }
+        else
+        {
+            updateViewLandscape()
         }
     }
     
@@ -64,7 +71,7 @@ class ViewController: UIViewController
             {
                 displayText.text = "0"
             }
-            else if last.isNumber() || last == "." || last == "(" || last == ")"
+            else if last.isNumber() || last == "." || last == "(" || last == ")" || last.isIrrational()
             {
                 displayText.deleteBackward()
             }
@@ -116,7 +123,7 @@ class ViewController: UIViewController
                 {
                     displayText.text = textToAppend
                 }
-                else if (tokens!.last!.isNumber() || tokens!.last! == ")" || tokens!.last! == "e") && expression.last! != "."
+                else if (tokens!.last!.isNumber() || tokens!.last!.isIrrational() || tokens!.last! == ")" || tokens!.last! == "e") && expression.last! != "."
                 {
                     displayText.insertText(textToAppend)
                 }
@@ -125,8 +132,30 @@ class ViewController: UIViewController
                     displayText.insertText(textToAppend)
                 }
             }
+            else if textToAppend.isIrrational()
+            {
+                if expression == "0" || self.equalsButton.isSelected == true
+                {
+                    displayText.text = textToAppend
+                }
+                else if (tokens!.last! == "(" || tokens!.last!.isOperator() || tokens!.last!.isFunction())
+                {
+                    displayText.insertText(textToAppend)
+                }
+            }
             else if textToAppend.isFunction()
             {
+                //Special case for factorial
+                //ugly
+                if textToAppend == Functions.factorial.rawValue
+                {
+                    if tokens!.last!.isNumber()
+                    {
+                        displayText.insertText(textToAppend)
+                    }
+                    
+                    return
+                }
                 if expression == "0" || self.equalsButton.isSelected == true
                 {
                     displayText.text = textToAppend
@@ -156,12 +185,12 @@ class ViewController: UIViewController
             }
             else if textToAppend == ")"
             {
-                if Character.isDigit(expression.last!) || expression.last! == ")"
+                if tokens!.last!.isNumber() || expression.last! == ")"
                 {
                     displayText.insertText(textToAppend)
                 }
             }
-            else
+            else if textToAppend.isNumber()
             {
                 if displayText.text == "0"
                 {
@@ -182,6 +211,7 @@ class ViewController: UIViewController
                     }
                 }
             }
+            
             self.equalsButton.isSelected = false
         }
     }
@@ -190,6 +220,28 @@ class ViewController: UIViewController
     {
         tryAppendText((sender as! UIButton).titleLabel!.text!)
         tryAppendText("(")
+    }
+    
+    @IBAction func squaredButtonPress(_ sender: Any)
+    {
+        tryAppendText("^")
+        tryAppendText("2")
+    }
+    
+    @IBAction func cubedButtonPress(_ sender: Any)
+    {
+        tryAppendText("^")
+        tryAppendText("3")
+    }
+    
+    @IBAction func factorialButtonPress(_ sender: Any)
+    {
+        tryAppendText("!")
+    }
+    
+    @IBAction func constButtonPress(_ sender: Any)
+    {
+        tryAppendText((sender as! UIButton).titleLabel!.text!)
     }
     
     @IBAction func deleteButtonPress(_ sender: Any)
@@ -204,7 +256,6 @@ class ViewController: UIViewController
         
         //animateButton(sender: sender as! UIButton)
     }
-    
     
     @IBAction func rightParenButtonPress(_ sender: Any)
     {
@@ -294,17 +345,19 @@ class ViewController: UIViewController
                 return
             }
             
+            
             let exp = Expression(expression: txt)
             
             do
             {
                 let result = try exp.evaluate()
                 
-                let str = String(result)
+                let str = String(describing: result)
                 displayText.text = str
                 self.savedAnswer = str
                 
                 suppressErrors()
+                self.equalsButton.isSelected = true
             }
             catch ExpressionError.INVALID_EXPRESSION
             {
@@ -361,19 +414,75 @@ class ViewController: UIViewController
         
         if UIDevice.current.orientation.isPortrait //Regular Mode
         {
-            for btn in hiddenButtons
-            {
-                btn.isHidden = true
-            }
+            updateViewPortrait()
         }
         else if UIDevice.current.orientation.isLandscape //Scientific Mode
         {
-            for btn in hiddenButtons
+            updateViewLandscape()
+        }
+    }
+    
+    private func updateViewLandscape()
+    {
+        for btn in hiddenButtons
+        {
+            btn.isHidden = false
+        }
+        
+        zeroButtonConstraint = zeroButtonConstraint.setMultiplier(multiplier: 1.0)
+    }
+    
+    private func updateViewPortrait()
+    {
+        for btn in hiddenButtons
+        {
+            btn.isHidden = true
+        }
+        
+        zeroButtonConstraint = zeroButtonConstraint.setMultiplier(multiplier: 2.03)
+    }
+    
+    
+    @IBAction func toFractionButtonPress(_ sender: Any)
+    {
+        if let expression = displayText.text
+        {
+            let tokens = Expression.convertToInfixArray(infixExpression: expression)
+            
+            if tokens!.count == 1 && tokens![0].isNumber() && expression != "0"
             {
-                btn.isHidden = false
+                let frac = MathUtilities().convertToFraction(decimal: NSDecimalNumber(string: tokens![0]))
+                
+                displayText.text = frac
             }
         }
     }
+    
+    @IBAction func toDecimalButtonPress(_ sender: Any)
+    {
+        if let expression = displayText.text
+        {
+            let tokens = Expression.convertToInfixArray(infixExpression: expression)
+            
+            if tokens!.count == 3 && (tokens![0].isNumber() && tokens![1] == Operators.fractionalDivision.rawValue && tokens![2].isNumber()) && expression != "0"
+            {
+                let exp = Expression(expression: expression)
+                
+                do
+                {
+                    let result = try exp.evaluate()
+                    
+                    let str = String(describing: result)
+                    displayText.text = str
+                }
+                catch
+                {
+                    
+                }
+            }
+        }
+    }
+    
     
     /*
         Numeric Button Presses
@@ -455,11 +564,12 @@ extension NSLayoutConstraint
     /**
      Change multiplier constraint
      
+     ***Following method from Andrew Schreiber via StackOverflow***
+     
      - parameter multiplier: CGFloat
      - returns: NSLayoutConstraint
      */
-    func setMultiplier(multiplier:CGFloat) -> NSLayoutConstraint
-    {
+    func setMultiplier(multiplier:CGFloat) -> NSLayoutConstraint {
         
         NSLayoutConstraint.deactivate([self])
         

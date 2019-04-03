@@ -17,7 +17,7 @@ class Expression
         self.exp = exp
     }
     
-    func evaluate() throws -> Double
+    func evaluate() throws -> NSDecimalNumber
     {
         do
         {
@@ -40,7 +40,7 @@ class Expression
      *Throws INVALID_EXPRESSION error if the input expression is not formatted correctly
      *Throws CALCULATION_OVERFLOW error if the calculation is too large
      */
-    private func evaluate(infixExp: String!) throws -> Double
+    private func evaluate(infixExp: String!) throws -> NSDecimalNumber
     {
         do
         {
@@ -54,6 +54,18 @@ class Expression
                 {
                     output.push(token)
                 }
+                else if token.isIrrational()
+                {
+                    switch token
+                    {
+                        case "π":
+                            output.push(String(IrrationalValues.pi.rawValue))
+                        case "𝑒":
+                            output.push(String(IrrationalValues.e.rawValue))
+                        default:
+                            throw ExpressionError.INVALID_EXPRESSION
+                    }
+                }
                 else if token.isFunction()
                 {
                     if let x = output.pop()
@@ -63,25 +75,27 @@ class Expression
                         switch token
                         {
                             case Functions.sin.rawValue:
-                                output.push(String(sin(val1.doubleValue)))
+                                output.push(String(describing: NSDecimalNumber(value: sin(val1.doubleValue))))
                             case Functions.cos.rawValue:
-                                output.push(String(cos(val1.doubleValue)))
+                                output.push(String(describing: NSDecimalNumber(value: cos(val1.doubleValue))))
                             case Functions.tan.rawValue:
-                                output.push(String(tan(val1.doubleValue)))
+                                output.push(String(describing: NSDecimalNumber(value: tan(val1.doubleValue))))
                             case Functions.sininv.rawValue:
-                                output.push(String(sinh(val1.doubleValue)))
+                                output.push(String(describing: NSDecimalNumber(value: sinh(val1.doubleValue))))
                             case Functions.cosinv.rawValue:
-                                output.push(String(cosh(val1.doubleValue)))
+                                output.push(String(describing: NSDecimalNumber(value: cosh(val1.doubleValue))))
                             case Functions.taninv.rawValue:
-                                output.push(String(tanh(val1.doubleValue)))
+                                output.push(String(describing: NSDecimalNumber(value: tanh(val1.doubleValue))))
                             case Functions.log.rawValue:
-                                output.push(String(log(val1.doubleValue)/log(10)))
+                                output.push(String(describing: NSDecimalNumber(value: log(val1.doubleValue)/log(10))))
                             case Functions.ln.rawValue:
-                                output.push(String(log(val1.doubleValue)/Double(log(Irrationals.e.rawValue))))
+                                output.push(String(describing: NSDecimalNumber(value: log(val1.doubleValue)/Double(log(IrrationalValues.e.rawValue)))))
                             case Functions.sqrt.rawValue:
-                                output.push(String(sqrt(val1.doubleValue)))
+                                output.push(String(describing: NSDecimalNumber(value: sqrt(val1.doubleValue))))
                             case Functions.cubert.rawValue:
-                                output.push(String(pow(val1.doubleValue, 1 / 3)))
+                                output.push(String(describing: NSDecimalNumber(value: pow(val1.doubleValue, 1 / 3))))
+                            case Functions.factorial.rawValue:
+                                output.push(String(describing: val1.factorial()))
                             default:
                                 throw ExpressionError.INVALID_EXPRESSION
                         }
@@ -117,18 +131,18 @@ class Expression
                         
                         switch token
                         {
-                            case String(OperatorCharacters.addition):
+                            case Operators.addition.rawValue:
                                 output.push(String(describing: val2.adding(val1)))
-                            case String(OperatorCharacters.subtraction):
+                            case Operators.subtraction.rawValue:
                                 output.push(String(describing: val2.subtracting(val1)))
-                            case String(OperatorCharacters.multiplication):
+                            case Operators.multiplication.rawValue:
                                 output.push(String(describing: val2.multiplying(by: val1)))
-                            case String(OperatorCharacters.division):
+                            case Operators.division.rawValue, Operators.fractionalDivision.rawValue:
                                 output.push(String(describing: val2.dividing(by: val1)))
-                            case String(OperatorCharacters.modulo):
+                            case Operators.modulo.rawValue:
                                 output.push(String(describing: val2.doubleValue.truncatingRemainder(dividingBy: val1.doubleValue)))
-                            case String(OperatorCharacters.exponentiation):
-                                output.push(String(pow(val2.doubleValue, val1.doubleValue)))
+                            case Operators.multiplication.rawValue:
+                                output.push(String(describing: NSDecimalNumber(value: pow(val2.doubleValue, val1.doubleValue))))
                             default:
                                 throw ExpressionError.INVALID_EXPRESSION
                         }
@@ -160,7 +174,7 @@ class Expression
                 }
                 else
                 {
-                    return nsDecimalResult.doubleValue
+                    return nsDecimalResult
                 }
             }
             else
@@ -175,6 +189,55 @@ class Expression
         }
     }
     
+    func isValidPartialExpression(exp: String) -> Bool
+    {
+        let tokens = Expression.convertToInfixArray(infixExpression: exp)
+        
+        if tokens == nil
+        {
+            return false
+        }
+        
+        for i in 0..<tokens!.count
+        {
+            if tokens![i].isOperator()
+            {
+                if tokens![i] != Operators.subtraction.rawValue
+                {
+                    if i == 0 || i == tokens!.count - 1{
+                        return false
+                    }
+                    else if tokens![i - 1].isOperator() || tokens![i + 1].isOperator(){
+                        return false
+                    }
+                }
+            }
+            else if tokens![i].isNumber()
+            {
+                if i > 0
+                {
+                    if tokens![i - 1] == ")"{
+                        return false
+                    }
+                }
+            }
+            else if tokens![i].isIrrational()
+            {
+                if i > 0
+                {
+                    if tokens![i - 1] == ")" || tokens![i - 1].isNumber(){
+                        return false
+                    }
+                }
+            }
+            else if tokens![i].isFunction()
+            {
+                
+            }
+        }
+        
+        return true
+    }
     
     
     /*
@@ -306,6 +369,11 @@ class Expression
             }
             
             pattern += "()" //Don't forget about parentheses
+            
+            //Add in irrationals
+            pattern += Irrationals.e.rawValue
+            pattern += Irrationals.pi.rawValue
+            
             pattern += "]"
             pattern += "|"
             
@@ -331,6 +399,8 @@ class Expression
             
             //Changing tokens with two or more negation signs to have only one negation sign
             //Example: "-----3" -> "-3"
+            
+            //Also replace irrational symbols with values
             for i in 0..<tokens.count
             {
                 if tokens[i].starts(with: "--")
@@ -349,6 +419,14 @@ class Expression
                     {
                         tokens[i] = String(num)
                     }
+                }
+                else if tokens[i] == Irrationals.e.rawValue
+                {
+                    tokens[i] = String(IrrationalValues.e.rawValue)
+                }
+                else if tokens[i] == Irrationals.pi.rawValue
+                {
+                    tokens[i] = String(IrrationalValues.pi.rawValue)
                 }
             }
             
@@ -443,6 +521,19 @@ extension String
         return false
     }
     
+    func isIrrational() -> Bool
+    {
+        for irrational in Irrationals.allCases
+        {
+            if self == irrational.rawValue
+            {
+                return true
+            }
+        }
+        
+        return false
+    }
+    
     func findInstances(of cToFind: Character) -> Int
     {
         var count = 0
@@ -457,6 +548,8 @@ extension String
         
         return count
     }
+    
+    
 }
 
 enum Functions: String, CaseIterable
@@ -479,13 +572,49 @@ enum Operators: String, CaseIterable
     case subtraction = "-" //DO NOT CHANGE THE POSITION OF THIS CASE
     case multiplication = "×" //Unicode
     case division = "÷" //Unicode
+    case fractionalDivision = "∕"
     case addition = "+"
     case modulo = "%"
     case exponentiation = "^"
 }
 
-enum Irrationals: Float
+enum Irrationals: String, CaseIterable
 {
-    case e = 2.71828
+    case e = "ℯ"
+    case pi = "π"
 }
 
+enum IrrationalValues: Float, CaseIterable
+{
+    case e  = 2.71828
+    case pi = 3.14159
+}
+
+extension NSDecimalNumber
+{
+    func factorial() -> NSDecimalNumber
+    {
+        if self == 0
+        {
+            return NSDecimalNumber(value: 1)
+        }
+        
+        var result = NSDecimalNumber(value: 1)
+        
+        var temp = self.intValue
+        
+        while(temp > 0)
+        {
+            result = result.multiplying(by: NSDecimalNumber(value: temp))
+            
+            if result == NSDecimalNumber.notANumber
+            {
+                return NSDecimalNumber.notANumber
+            }
+            
+            temp -= 1
+        }
+        
+        return result
+    }
+}

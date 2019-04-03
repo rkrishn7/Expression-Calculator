@@ -23,7 +23,6 @@ class ExpressionView: UITextView, UITextViewDelegate
     override init(frame: CGRect, textContainer: NSTextContainer?)
     {
         super.init(frame: frame, textContainer: textContainer)
-        
     }
     
     required init?(coder aDecoder: NSCoder)
@@ -40,12 +39,11 @@ class ExpressionView: UITextView, UITextViewDelegate
                 highlightMatchingParentheses(indexOfRParen: self.text.index(before: self.text.endIndex))
                 resetTypingAttributes()
             }
-            else{
+            else
+            {
                 resetTextAttributes()
             }
         }
-        
-        //
     }
     
     private func resetTypingAttributes()
