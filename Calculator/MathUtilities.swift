@@ -23,8 +23,19 @@ class MathUtilities
             return num + Operators.fractionalDivision.rawValue + "1"
         }
         
-        let whole = num[num.startIndex..<num.lastIndex(of: ".")!]
-        let dec   = num[num.index(after: num.lastIndex(of: ".")!)..<num.endIndex]
+        var whole = String(num[num.startIndex..<num.lastIndex(of: ".")!])
+        let dec   = String(num[num.index(after: num.lastIndex(of: ".")!)..<num.endIndex])
+        
+        var neg = false
+        
+        if whole.contains(Operators.subtraction.rawValue)
+        {
+            let c = whole.findInstances(of: Character(Operators.subtraction.rawValue))
+            
+            neg = c % 2 != 0
+        }
+        
+        whole = whole.replacingOccurrences(of: "-", with: "")
         
         var precision = NSDecimalNumber(value: 1)
         
@@ -32,16 +43,16 @@ class MathUtilities
             precision = precision.multiplying(by: NSDecimalNumber(value: 10))
         }
         
-        let numerator = (NSDecimalNumber(string: String(whole)).multiplying(by: precision)).adding(NSDecimalNumber(string: String(dec))).uint64Value
+        let numerator = (NSDecimalNumber(string: whole).multiplying(by: precision)).adding(NSDecimalNumber(string: dec)).uint64Value
         
-        return reduceFraction(numerator: numerator, denominator: precision.uint64Value)
+        return reduceFraction(numerator: numerator, denominator: precision.uint64Value, neg: neg)
     }
     
-    func reduceFraction(numerator: UInt64, denominator: UInt64) -> String
+    func reduceFraction(numerator: UInt64, denominator: UInt64, neg: Bool) -> String
     {
         let x = gcd(numerator: numerator, denominator: denominator)
         
-        return String(numerator / x) + Operators.fractionalDivision.rawValue + String(denominator / x)
+        return ((neg) ? Operators.subtraction.rawValue : "") + String(numerator / x) + Operators.fractionalDivision.rawValue + String(denominator / x)
     }
     
     func gcd(numerator: UInt64, denominator: UInt64) -> UInt64

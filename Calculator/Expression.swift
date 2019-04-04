@@ -141,7 +141,7 @@ class Expression
                                 output.push(String(describing: val2.dividing(by: val1)))
                             case Operators.modulo.rawValue:
                                 output.push(String(describing: val2.doubleValue.truncatingRemainder(dividingBy: val1.doubleValue)))
-                            case Operators.multiplication.rawValue:
+                            case Operators.exponentiation.rawValue:
                                 output.push(String(describing: NSDecimalNumber(value: pow(val2.doubleValue, val1.doubleValue))))
                             default:
                                 throw ExpressionError.INVALID_EXPRESSION
@@ -357,6 +357,9 @@ class Expression
     {
         do
         {
+            var formattedInfixExp = infixExpression.replacingOccurrences(of: Irrationals.e.rawValue, with: String(IrrationalValues.e.rawValue))
+            formattedInfixExp = formattedInfixExp.replacingOccurrences(of: Irrationals.pi.rawValue, with: String(IrrationalValues.pi.rawValue))
+            
             var pattern = "(?<!\\d)-*\\d+(?:\\.\\d+)?|"
             
             
@@ -370,9 +373,9 @@ class Expression
             
             pattern += "()" //Don't forget about parentheses
             
-            //Add in irrationals
-            pattern += Irrationals.e.rawValue
-            pattern += Irrationals.pi.rawValue
+            //Add in irrationals (we replace them in the beginning...don't need this anymore)
+            //pattern += Irrationals.e.rawValue
+            //pattern += Irrationals.pi.rawValue
             
             pattern += "]"
             pattern += "|"
@@ -390,11 +393,11 @@ class Expression
             
             let regex = try NSRegularExpression(pattern: pattern)
             
-            let results = regex.matches(in: infixExpression, range: NSRange(infixExpression.startIndex..., in: infixExpression))
+            let results = regex.matches(in: formattedInfixExp, range: NSRange(formattedInfixExp.startIndex..., in: formattedInfixExp))
             
             var tokens = results.map
             {
-                String(infixExpression[Range($0.range, in: infixExpression)!])
+                String(formattedInfixExp[Range($0.range, in: formattedInfixExp)!])
             }
             
             //Changing tokens with two or more negation signs to have only one negation sign
@@ -440,6 +443,7 @@ class Expression
     
 }
 
+//DEPRECATED
 struct OperatorCharacters
 {
     static let multiplication: Character = "×" //Unicode Character
