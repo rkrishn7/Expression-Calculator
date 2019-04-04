@@ -10,7 +10,26 @@ import UIKit
 
 class BinaryCalculatorViewController: UIViewController
 {
-
+    //Override supported interface orientation for this view controller
+    //No need for landscape view, as it does not provide added functionality
+    //Doesn't work
+    /*
+    override var supportedInterfaceOrientations: UIInterfaceOrientationMask
+    {
+        return .portrait
+    }
+    
+    override var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation
+    {
+        return .portrait
+    }
+    
+    override var shouldAutorotate: Bool
+    {
+        return false
+    }
+    */
+    
     @IBOutlet weak var navItem: UINavigationItem!
     @IBOutlet weak var expView: ExpressionView!
     
@@ -66,6 +85,8 @@ class BinaryCalculatorViewController: UIViewController
         
         enableExpressionView(view: self.decimalExpView)
     }
+    
+    //Override supported interface orientations
     
     @objc func binaryViewTap(sender: UITapGestureRecognizer)
     {
@@ -153,42 +174,7 @@ class BinaryCalculatorViewController: UIViewController
             self.decimalExpView.backgroundColor = defaultColor
         }
     }
-    
-    func tryAppendText(textToInsert: String)
-    {
-        if let expText = expView.text
-        {
-            if expText == "0"
-            {
-                expView.text = textToInsert
-            }
-            else
-            {
-                if expText.hasPrefix("0b")
-                {
-                    if textToInsert == "0" || textToInsert == "1"
-                    {
-                        expView.insertText(textToInsert)
-                    }
-                }
-                else if expText.hasPrefix("0x")
-                {
-                    if textToInsert != "0b" && textToInsert != "0x"
-                    {
-                        expView.insertText(textToInsert)
-                    }
-                }
-                else if Character.isDigit(expText.first!)
-                {
-                    if Character.isDigit(textToInsert.first!) && (textToInsert != "0b" && textToInsert != "0x")
-                    {
-                        expView.insertText(textToInsert)
-                    }
-                }
-            }
-        }
-    }
-    
+
     @IBAction func clearButtonPress(_ sender: Any)
     {
         if mainView == self.hexExpView
@@ -226,22 +212,46 @@ class BinaryCalculatorViewController: UIViewController
         
         let baseConverter = BaseConverter()
         
-        self.decimalExpView.text = baseConverter.convertTo(base: BaseType.Decimal, input: mainView.text)
-        self.hexExpView.text = baseConverter.convertTo(base: BaseType.Hex, input: mainView.text)
-        self.binaryExpView.text = baseConverter.convertTo(base: BaseType.Binary, input: mainView.text)
+        if mainView == self.decimalExpView
+        {
+            let hexVal = baseConverter.convertTo(base: BaseType.Hex, input: mainView.text)
+            let binVal = baseConverter.convertTo(base: BaseType.Binary, input: mainView.text)
+            
+            self.hexExpView.text = hexVal ?? self.hexExpView.text
+            self.binaryExpView.text = binVal ?? self.binaryExpView.text
+            
+        }
+        else if mainView == self.hexExpView
+        {
+            let decVal = baseConverter.convertTo(base: BaseType.Decimal, input: mainView.text)
+            let binVal = baseConverter.convertTo(base: BaseType.Binary, input: mainView.text)
+            
+            self.decimalExpView.text = decVal ?? self.decimalExpView.text
+            self.binaryExpView.text = binVal ?? self.binaryExpView.text
+            
+        }
+        else if mainView == self.binaryExpView
+        {
+            let decVal = baseConverter.convertTo(base: BaseType.Decimal, input: mainView.text)
+            let hexVal = baseConverter.convertTo(base: BaseType.Hex, input: mainView.text)
+            
+            self.decimalExpView.text = decVal ?? self.decimalExpView.text
+            self.hexExpView.text = hexVal ?? self.hexExpView.text
+            
+        }
     }
     
     @IBAction func numericButtonPress(_ sender: Any)
     {
-        if mainView.text == "0"
+        if mainView.text == "0" && (sender as! UIButton).titleLabel!.text! != "0"
         {
             mainView.text = (sender as! UIButton).titleLabel!.text!
         }
-        else if mainView.text == "0b0"
+        else if mainView.text == "0b0" && (sender as! UIButton).titleLabel!.text! != "0"
         {
             mainView.text = "0b" + (sender as! UIButton).titleLabel!.text!
         }
-        else if mainView.text == "0x0"
+        else if mainView.text == "0x0" && (sender as! UIButton).titleLabel!.text! != "0"
         {
             mainView.text = "0x" + (sender as! UIButton).titleLabel!.text!
         }
@@ -252,16 +262,41 @@ class BinaryCalculatorViewController: UIViewController
         
         let baseConverter = BaseConverter()
         
-        let decVal = baseConverter.convertTo(base: BaseType.Decimal, input: mainView.text)
-        let hexVal = baseConverter.convertTo(base: BaseType.Hex, input: mainView.text)
-        let binVal = baseConverter.convertTo(base: BaseType.Binary, input: mainView.text)
-        
-        self.decimalExpView.text = decVal ?? self.decimalExpView.text
-        self.hexExpView.text = hexVal ?? self.hexExpView.text
-        self.binaryExpView.text = binVal ?? self.binaryExpView.text
-        
-        if decVal == nil || hexVal == nil || binVal == nil{
-            self.mainView.deleteBackward()
+        if mainView == self.decimalExpView
+        {
+            let hexVal = baseConverter.convertTo(base: BaseType.Hex, input: mainView.text)
+            let binVal = baseConverter.convertTo(base: BaseType.Binary, input: mainView.text)
+            
+            self.hexExpView.text = hexVal ?? self.hexExpView.text
+            self.binaryExpView.text = binVal ?? self.binaryExpView.text
+            
+            if  hexVal == nil || binVal == nil{
+                self.mainView.deleteBackward()
+            }
+        }
+        else if mainView == self.hexExpView
+        {
+            let decVal = baseConverter.convertTo(base: BaseType.Decimal, input: mainView.text)
+            let binVal = baseConverter.convertTo(base: BaseType.Binary, input: mainView.text)
+            
+            self.decimalExpView.text = decVal ?? self.decimalExpView.text
+            self.binaryExpView.text = binVal ?? self.binaryExpView.text
+            
+            if decVal == nil || binVal == nil{
+                self.mainView.deleteBackward()
+            }
+        }
+        else if mainView == self.binaryExpView
+        {
+            let decVal = baseConverter.convertTo(base: BaseType.Decimal, input: mainView.text)
+            let hexVal = baseConverter.convertTo(base: BaseType.Hex, input: mainView.text)
+            
+            self.decimalExpView.text = decVal ?? self.decimalExpView.text
+            self.hexExpView.text = hexVal ?? self.hexExpView.text
+            
+            if decVal == nil || hexVal == nil{
+                self.mainView.deleteBackward()
+            }
         }
     }
 }
