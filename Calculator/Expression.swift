@@ -525,6 +525,11 @@ extension String
         return false
     }
     
+    func isUnaryFunction() -> Bool
+    {
+        return self == Functions.factorial.rawValue
+    }
+    
     func isIrrational() -> Bool
     {
         for irrational in Irrationals.allCases
@@ -609,12 +614,13 @@ extension NSDecimalNumber
         
         while(temp > 0)
         {
-            result = result.multiplying(by: NSDecimalNumber(value: temp))
-            
-            if result == NSDecimalNumber.notANumber
+            //bug
+            if result.compare(NSDecimalNumber.maximum) == ComparisonResult.orderedDescending
             {
                 return NSDecimalNumber.notANumber
             }
+            
+            result = result.multiplying(by: NSDecimalNumber(value: temp))
             
             temp -= 1
         }

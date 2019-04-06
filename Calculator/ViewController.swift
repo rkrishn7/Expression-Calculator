@@ -123,7 +123,7 @@ class ViewController: UIViewController, UITextViewDelegate
                 {
                     displayText.text = textToAppend
                 }
-                else if (tokens!.last!.isNumber() || tokens!.last!.isIrrational() || tokens!.last! == ")" || tokens!.last! == "e") && expression.last! != "."
+                else if (tokens!.last!.isNumber() || tokens!.last!.isIrrational() || tokens!.last! == ")" || tokens!.last! == "e" || tokens!.last!.isUnaryFunction()) && expression.last! != "."
                 {
                     displayText.insertText(textToAppend)
                 }
